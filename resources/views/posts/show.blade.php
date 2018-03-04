@@ -50,10 +50,21 @@
         comments: {},
         commentBox: '',
         post:{!! $post->toJson() !!},
-        user: {api_token :  "{!! Auth::check() ?  Auth::user()->api_token : false !!}"}
+        @if(Auth::check())
+          user: {
+            api_token :  "{{Auth::user()->api_token}}",
+            id        : {{Auth::id()}}
+          }
+        @else
+          user : {
+            api_token : false,
+            id : false
+          }
+        @endif
       },
       mounted(){
         this.getComments();
+        this.listen();
       },
       methods: {
         getComments() {
@@ -77,6 +88,15 @@
           })
           .catch(function(error){
             console.log(error);
+          });
+        },
+        listen(){
+          Echo.channel('post.'+this.post.id)
+          .listen('NewComment', (comment) => {
+            //Better way of handling the duplicate is done in server
+            console.log(comment);
+            this.comments.unshift(comment);  
+            
           });
         }
       }

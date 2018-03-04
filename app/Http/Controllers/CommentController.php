@@ -7,12 +7,26 @@ use Auth;
 use Illuminate\Http\Request;
 use App\Post;
 use App\Comment;
+use App\Events\NewComment;
 
 class CommentController extends Controller
 {
     public function index(Post $post)
     {
-        $response = $post->comments()->with('user')->latest()->get();
+        $comments = $post->comments()->with('user')->latest()->get();
+        $response = [];
+        foreach($comments as $comment){
+            $response[] =  [
+            'body' => $comment->body,
+            'created_at' => $comment->created_at->toFormattedDateString(),
+            'user' => [
+                'name' => $comment->user->name,
+                'avatar' => 'http://lorempixel/50/50',
+                'id' => $comment->user->id
+                ]
+            ];
+        }
+        
         return response()->json($response);
     }
 
@@ -24,6 +38,8 @@ class CommentController extends Controller
         ]);
         
         $comment = Comment::find($comment->id)->with('user')->latest()->first();
+        
+        broadcast(new NewComment($comment))->toOthers();
 
         return $comment->toJson();
         // return response()->json($comment);
