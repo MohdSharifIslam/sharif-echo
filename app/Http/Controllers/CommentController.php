@@ -18,7 +18,7 @@ class CommentController extends Controller
         foreach($comments as $comment){
             $response[] =  [
             'body' => $comment->body,
-            'created_at' => $comment->created_at->toFormattedDateString(),
+            'created_at' => $comment->created_at->toDayDateTimeString(),
             'user' => [
                 'name' => $comment->user->name,
                 'avatar' => 'http://lorempixel/50/50',
@@ -41,7 +41,16 @@ class CommentController extends Controller
         
         broadcast(new NewComment($comment))->toOthers();
 
-        return $comment->toJson();
+        $comment =  [
+            'body' => $comment->body,
+            'created_at' => $comment->created_at->toDayDateTimeString(),
+            'user' => [
+                'name' => $comment->user->name,
+                'avatar' => 'http://lorempixel/50/50',
+                'id' => $comment->user->id
+                ]
+            ];
+        return $comment;
         // return response()->json($comment);
     }
 }
